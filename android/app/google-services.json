@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "595295320318",
+    "project_id": "arabian-majlis-petta",
+    "storage_bucket": "arabian-majlis-petta.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:595295320318:android:7570d4c7324dfccf7b8daf",
+        "android_client_info": {
+          "package_name": "com.example.arabian_majlis_petta"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDYBm5artqfSJ0Ibaz1B9Aq60IQvg1yf4k"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

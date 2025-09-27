@@ -1,0 +1,35 @@
+{
+    "firestore": {
+        "rules": "firestore.rules",
+        "indexes": "firestore.indexes.json"
+    },
+    "flutter": {
+        "platforms": {
+            "android": {
+                "default": {
+                    "projectId": "arabian-majlis-petta",
+                    "appId": "1:595295320318:android:7570d4c7324dfccf7b8daf",
+                    "fileOutput": "android/app/google-services.json"
+                }
+            },
+            "ios": {
+                "default": {
+                    "projectId": "arabian-majlis-petta",
+                    "appId": "1:595295320318:ios:6cb1a7b413ba46b67b8daf",
+                    "uploadDebugSymbols": false,
+                    "fileOutput": "ios/Runner/GoogleService-Info.plist"
+                }
+            },
+            "dart": {
+                "lib/firebase_options.dart": {
+                    "projectId": "arabian-majlis-petta",
+                    "configurations": {
+                        "android": "1:595295320318:android:7570d4c7324dfccf7b8daf",
+                        "ios": "1:595295320318:ios:6cb1a7b413ba46b67b8daf",
+                        "web": "1:595295320318:web:7707eaba77fa9bf37b8daf"
+                    }
+                }
+            }
+        }
+    }
+}

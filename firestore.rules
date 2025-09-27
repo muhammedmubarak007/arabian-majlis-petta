@@ -1,0 +1,69 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // 🔑 Function to check if user is an admin
+    function isAdmin() {
+      return request.auth != null
+        && (request.auth.token.email in [
+          "admin1@example.com",
+          "admin2@example.com",
+          "mubarakmuhammed336@gmail.com",
+          "arabianmajlisatholi@gmail.com",
+          "rm.arabianmajlisatholi@gmail.com",
+          "idp9656@gmail.com",
+          "muhammeddhaheen03@gmail.com"
+        ]);
+    }
+
+    // 🔹 USERS COLLECTION
+    match /users/{userId} {
+
+      // Admins can read/write all users
+      allow read, write: if isAdmin();
+
+      // Each user can read/update their own profile
+      allow read, update: if request.auth != null && request.auth.uid == userId;
+
+      // Normal users cannot create or delete other users
+      allow create, delete: if false;
+    }
+
+    // 🔹 ORDERS COLLECTION
+    match /orders/{orderId} {
+      
+      // Admins can do anything with orders
+      allow read, write: if isAdmin();
+
+      // All authenticated users can read orders
+      allow read: if request.auth != null;
+
+      // All authenticated users can create orders (for delivery boys to take)
+      allow create: if request.auth != null;
+
+      // Users can update orders if they are unassigned or assigned to them
+      // Temporarily more permissive for debugging
+      allow update: if request.auth != null;
+
+      // Only admins can delete orders
+      allow delete: if isAdmin();
+    }
+
+    // 🔹 DELIVERIES COLLECTION
+    match /deliveries/{deliveryId} {
+
+      // Admins can read/write all deliveries
+      allow read, write: if isAdmin();
+
+      // Delivery boys can create deliveries only for themselves
+      allow create: if request.auth != null
+        && request.resource.data.userId == request.auth.uid;
+
+      // Delivery boys can read/update/delete only their own deliveries
+      allow read, update, delete: if request.auth != null
+        && resource.data.userId == request.auth.uid;
+
+      // Normal users cannot access other deliveries
+    }
+  }
+}
