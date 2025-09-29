@@ -108,7 +108,7 @@ class _DeliveryDashboardState extends State<DeliveryDashboard>
     Navigator.pushAndRemoveUntil(
       context,
       MaterialPageRoute(builder: (_) => const RoleSelectionScreen()),
-      (_) => false,
+          (_) => false,
     );
   }
 
@@ -192,7 +192,7 @@ class _DeliveryDashboardState extends State<DeliveryDashboard>
         controller: _tabController,
         children: [
           PendingOrdersTab(user: widget.user),
-          ActiveDeliveriesTab(),
+          ActiveDeliveriesTab(user: widget.user),
         ],
       ),
     );
@@ -228,9 +228,9 @@ class _ActiveDeliveriesPageState extends State<ActiveDeliveriesPage> {
         deliveries = deliveries
             .map(
               (d) => d.running
-                  ? d.copyWith(elapsedSeconds: d.elapsedSeconds + 1)
-                  : d,
-            )
+              ? d.copyWith(elapsedSeconds: d.elapsedSeconds + 1)
+              : d,
+        )
             .toList();
       });
     });
@@ -275,10 +275,10 @@ class _ActiveDeliveriesPageState extends State<ActiveDeliveriesPage> {
           .collection('orders')
           .doc(delivery.documentId)
           .update({
-            'status': 'completed',
-            'completedAt': FieldValue.serverTimestamp(),
-            'completedBy': widget.user.email ?? 'Unknown',
-          });
+        'status': 'completed',
+        'completedAt': FieldValue.serverTimestamp(),
+        'completedBy': widget.user.email ?? 'Unknown',
+      });
     }
 
     // Also add to deliveries collection for historical tracking
@@ -316,82 +316,82 @@ class _ActiveDeliveriesPageState extends State<ActiveDeliveriesPage> {
       ),
       body: deliveries.isEmpty
           ? const Center(
-              child: Text(
-                "No active deliveries",
-                style: TextStyle(color: Colors.black54),
-              ),
-            )
+        child: Text(
+          "No active deliveries",
+          style: TextStyle(color: Colors.black54),
+        ),
+      )
           : ListView.builder(
-              padding: const EdgeInsets.all(16),
-              itemCount: deliveries.length,
-              itemBuilder: (context, index) {
-                final d = deliveries[index];
-                return Card(
-                  color: Colors.white,
-                  elevation: 2,
-                  margin: const EdgeInsets.symmetric(vertical: 8),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: ListTile(
-                    leading: const CircleAvatar(
-                      backgroundColor: Colors.black12,
-                      child: Icon(Icons.delivery_dining, color: Colors.black),
-                    ),
-                    title: Text(
-                      "Bill No : ${d.bill}",
-                      style: const TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                    subtitle: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const SizedBox(height: 4),
-                        Row(
-                          children: [
-                            const Icon(
-                              LucideIcons.mapPin,
-                              size: 14,
-                              color: Colors.black54,
-                            ),
-                            const SizedBox(width: 4),
-                            Expanded(
-                              child: Text(
-                                d.location,
-                                style: const TextStyle(color: Colors.black87),
-                              ),
-                            ),
-                          ],
-                        ),
-
-                        const SizedBox(height: 4),
-
-                        Text(
-                          "Time: ${formatTime(d.elapsedSeconds)}",
-                          style: const TextStyle(
-                            fontSize: 12,
-                            color: Colors.black54,
-                          ),
-                        ),
-                      ],
-                    ),
-                    trailing: ElevatedButton.icon(
-                      onPressed: () => _reachDelivery(d),
-                      icon: const Icon(LucideIcons.check, color: Colors.white),
-                      label: const Text(
-                        "Complete",
-                        style: TextStyle(color: Colors.white),
-                      ),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.black87,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                      ),
-                    ),
-                  ),
-                );
-              },
+        padding: const EdgeInsets.all(16),
+        itemCount: deliveries.length,
+        itemBuilder: (context, index) {
+          final d = deliveries[index];
+          return Card(
+            color: Colors.white,
+            elevation: 2,
+            margin: const EdgeInsets.symmetric(vertical: 8),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
             ),
+            child: ListTile(
+              leading: const CircleAvatar(
+                backgroundColor: Colors.black12,
+                child: Icon(Icons.delivery_dining, color: Colors.black),
+              ),
+              title: Text(
+                "Bill No : ${d.bill}",
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+              subtitle: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const SizedBox(height: 4),
+                  Row(
+                    children: [
+                      const Icon(
+                        LucideIcons.mapPin,
+                        size: 14,
+                        color: Colors.black54,
+                      ),
+                      const SizedBox(width: 4),
+                      Expanded(
+                        child: Text(
+                          d.location,
+                          style: const TextStyle(color: Colors.black87),
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 4),
+
+                  Text(
+                    "Time: ${formatTime(d.elapsedSeconds)}",
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: Colors.black54,
+                    ),
+                  ),
+                ],
+              ),
+              trailing: ElevatedButton.icon(
+                onPressed: () => _reachDelivery(d),
+                icon: const Icon(LucideIcons.check, color: Colors.white),
+                label: const Text(
+                  "Complete",
+                  style: TextStyle(color: Colors.white),
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.black87,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+              ),
+            ),
+          );
+        },
+      ),
     );
   }
 }

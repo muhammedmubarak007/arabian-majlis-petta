@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
 /// Model for an active delivery item
@@ -49,7 +50,8 @@ class ActiveDeliveryItem {
 }
 
 class ActiveDeliveriesTab extends StatefulWidget {
-  const ActiveDeliveriesTab({super.key});
+  final User user;
+  const ActiveDeliveriesTab({super.key, required this.user});
 
   @override
   State<ActiveDeliveriesTab> createState() => _ActiveDeliveriesTabState();
@@ -144,20 +146,21 @@ class _ActiveDeliveriesTabState extends State<ActiveDeliveriesTab> {
       final snapshot = await FirebaseFirestore.instance
           .collection('orders')
           .where(
-            'createdAt',
-            isGreaterThanOrEqualTo: Timestamp.fromDate(startOfDay),
-          )
+        'createdAt',
+        isGreaterThanOrEqualTo: Timestamp.fromDate(startOfDay),
+      )
           .where('createdAt', isLessThan: Timestamp.fromDate(endOfDay))
           .get();
 
       if (!mounted) return;
 
       setState(() {
-        // Filter for active orders only and map to ActiveDeliveryItem
+        // Filter for active orders only and assigned to current user, then map to ActiveDeliveryItem
         final activeOrders = snapshot.docs.where((doc) {
           final data = doc.data();
           final status = data['status'];
-          return status == 'active';
+          final assignedTo = data['assignedTo'];
+          return status == 'active' && assignedTo == widget.user.uid;
         }).toList();
 
         activeDeliveries = activeOrders.map((doc) {
@@ -233,11 +236,11 @@ class _ActiveDeliveriesTabState extends State<ActiveDeliveriesTab> {
           .collection('orders')
           .doc(delivery.documentId)
           .update({
-            'status': 'completed',
-            'completedAt': FieldValue.serverTimestamp(),
-            'completedBy': delivery.assignedToEmail,
-            'durationMinutes': durationMinutes,
-          });
+        'status': 'completed',
+        'completedAt': FieldValue.serverTimestamp(),
+        'completedBy': delivery.assignedToEmail,
+        'durationMinutes': durationMinutes,
+      });
 
       // Add to deliveries collection for historical tracking
       print('Creating delivery record with userId: ${delivery.assignedTo}');
@@ -344,231 +347,231 @@ class _ActiveDeliveriesTabState extends State<ActiveDeliveriesTab> {
                 ? const Center(child: CircularProgressIndicator())
                 : activeDeliveries.isEmpty
                 ? Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.delivery_dining,
-                          size: 64,
-                          color: Colors.black26,
-                        ),
-                        const SizedBox(height: 16),
-                        const Text(
-                          "No active deliveries",
-                          style: TextStyle(
-                            fontSize: 18,
-                            color: Colors.black54,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        const Text(
-                          "Start deliveries to see them here",
-                          style: TextStyle(fontSize: 14, color: Colors.black38),
-                          textAlign: TextAlign.center,
-                        ),
-                      ],
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.delivery_dining,
+                    size: 64,
+                    color: Colors.black26,
+                  ),
+                  const SizedBox(height: 16),
+                  const Text(
+                    "No active deliveries",
+                    style: TextStyle(
+                      fontSize: 18,
+                      color: Colors.black54,
+                      fontWeight: FontWeight.w500,
                     ),
-                  )
+                  ),
+                  const SizedBox(height: 8),
+                  const Text(
+                    "Start deliveries to see them here",
+                    style: TextStyle(fontSize: 14, color: Colors.black38),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+              ),
+            )
                 : ListView.builder(
+              padding: const EdgeInsets.all(16),
+              itemCount: activeDeliveries.length,
+              itemBuilder: (context, index) {
+                final delivery = activeDeliveries[index];
+                return Card(
+                  color: Colors.white,
+                  elevation: 2,
+                  margin: const EdgeInsets.symmetric(vertical: 8),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Padding(
                     padding: const EdgeInsets.all(16),
-                    itemCount: activeDeliveries.length,
-                    itemBuilder: (context, index) {
-                      final delivery = activeDeliveries[index];
-                      return Card(
-                        color: Colors.white,
-                        elevation: 2,
-                        margin: const EdgeInsets.symmetric(vertical: 8),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Padding(
-                          padding: const EdgeInsets.all(16),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              // Header row
-                              Row(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Header row
+                        Row(
+                          children: [
+                            CircleAvatar(
+                              backgroundColor: Colors.green,
+                              child: const Icon(
+                                Icons.delivery_dining,
+                                color: Colors.white,
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment:
+                                CrossAxisAlignment.start,
                                 children: [
-                                  CircleAvatar(
-                                    backgroundColor: Colors.green,
-                                    child: const Icon(
-                                      Icons.delivery_dining,
-                                      color: Colors.white,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 12),
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          "Bill No : ${delivery.bill}",
-                                          style: const TextStyle(
-                                            fontWeight: FontWeight.bold,
-                                            fontSize: 16,
-                                            color: Colors.black,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 8,
-                                      vertical: 4,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: Colors.green,
-                                      borderRadius: BorderRadius.circular(12),
-                                    ),
-                                    child: const Text(
-                                      "ACTIVE",
-                                      style: TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 10,
-                                        fontWeight: FontWeight.bold,
-                                      ),
+                                  Text(
+                                    "Bill No : ${delivery.bill}",
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 16,
+                                      color: Colors.black,
                                     ),
                                   ),
                                 ],
                               ),
-
-                              const SizedBox(height: 12),
-
-                              // Location
-                              Row(
-                                children: [
-                                  const Icon(
-                                    LucideIcons.mapPin,
-                                    size: 16,
-                                    color: Colors.black54,
-                                  ),
-                                  const SizedBox(width: 6),
-                                  Expanded(
-                                    child: Text(
-                                      delivery.location,
-                                      style: const TextStyle(
-                                        color: Colors.black87,
-                                        fontSize: 14,
-                                      ),
-                                    ),
-                                  ),
-                                ],
+                            ),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 4,
                               ),
-
-                              const SizedBox(height: 12),
-
-                              // Time information
-                              Container(
-                                padding: const EdgeInsets.all(12),
-                                decoration: BoxDecoration(
-                                  color: const Color.fromARGB(
-                                    31,
-                                    113,
-                                    113,
-                                    113,
-                                  ),
-                                  borderRadius: BorderRadius.circular(8),
+                              decoration: BoxDecoration(
+                                color: Colors.green,
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: const Text(
+                                "ACTIVE",
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.bold,
                                 ),
-                                child: Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        const Text(
-                                          "Elapsed Time",
-                                          style: TextStyle(
-                                            fontSize: 12,
-                                            color: Colors.black54,
-                                          ),
-                                        ),
-                                        Text(
-                                          formatTime(delivery.elapsedSeconds),
-                                          style: const TextStyle(
-                                            fontSize: 18,
-                                            fontWeight: FontWeight.bold,
-                                            color: Colors.black,
-                                          ),
-                                        ),
-                                      ],
+                              ),
+                            ),
+                          ],
+                        ),
+
+                        const SizedBox(height: 12),
+
+                        // Location
+                        Row(
+                          children: [
+                            const Icon(
+                              LucideIcons.mapPin,
+                              size: 16,
+                              color: Colors.black54,
+                            ),
+                            const SizedBox(width: 6),
+                            Expanded(
+                              child: Text(
+                                delivery.location,
+                                style: const TextStyle(
+                                  color: Colors.black87,
+                                  fontSize: 14,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+
+                        const SizedBox(height: 12),
+
+                        // Time information
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: const Color.fromARGB(
+                              31,
+                              113,
+                              113,
+                              113,
+                            ),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Row(
+                            mainAxisAlignment:
+                            MainAxisAlignment.spaceBetween,
+                            children: [
+                              Column(
+                                crossAxisAlignment:
+                                CrossAxisAlignment.start,
+                                children: [
+                                  const Text(
+                                    "Elapsed Time",
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: Colors.black54,
                                     ),
-                                    if (delivery.startTime != null)
-                                      Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.end,
-                                        children: [
-                                          const Text(
-                                            "Started At",
-                                            style: TextStyle(
-                                              fontSize: 12,
-                                              color: Colors.black54,
-                                            ),
-                                          ),
-                                          Text(
-                                            _formatTimeAmPm(
-                                              delivery.startTime!,
-                                            ),
-                                            style: const TextStyle(
-                                              fontSize: 14,
-                                              fontWeight: FontWeight.w500,
-                                              color: Colors.black,
-                                            ),
-                                          ),
-                                        ],
+                                  ),
+                                  Text(
+                                    formatTime(delivery.elapsedSeconds),
+                                    style: const TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.black,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              if (delivery.startTime != null)
+                                Column(
+                                  crossAxisAlignment:
+                                  CrossAxisAlignment.end,
+                                  children: [
+                                    const Text(
+                                      "Started At",
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color: Colors.black54,
                                       ),
+                                    ),
+                                    Text(
+                                      _formatTimeAmPm(
+                                        delivery.startTime!,
+                                      ),
+                                      style: const TextStyle(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w500,
+                                        color: Colors.black,
+                                      ),
+                                    ),
                                   ],
                                 ),
-                              ),
-
-                              const SizedBox(height: 16),
-
-                              // Complete button
-                              SizedBox(
-                                width: double.infinity,
-                                child: ElevatedButton.icon(
-                                  onPressed: completingDeliveryId != null
-                                      ? null
-                                      : () => _completeDelivery(delivery),
-                                  icon:
-                                      completingDeliveryId ==
-                                          delivery.documentId
-                                      ? const SizedBox(
-                                          width: 16,
-                                          height: 16,
-                                          child: CircularProgressIndicator(
-                                            strokeWidth: 2,
-                                            color: Colors.white,
-                                          ),
-                                        )
-                                      : const Icon(
-                                          LucideIcons.check,
-                                          color: Colors.white,
-                                        ),
-                                  label: Text(
-                                    completingDeliveryId == delivery.documentId
-                                        ? "Completing..."
-                                        : "Complete",
-                                    style: const TextStyle(color: Colors.white),
-                                  ),
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: Colors.black,
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(8),
-                                    ),
-                                  ),
-                                ),
-                              ),
                             ],
                           ),
                         ),
-                      );
-                    },
+
+                        const SizedBox(height: 16),
+
+                        // Complete button
+                        SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton.icon(
+                            onPressed: completingDeliveryId != null
+                                ? null
+                                : () => _completeDelivery(delivery),
+                            icon:
+                            completingDeliveryId ==
+                                delivery.documentId
+                                ? const SizedBox(
+                              width: 16,
+                              height: 16,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
+                            )
+                                : const Icon(
+                              LucideIcons.check,
+                              color: Colors.white,
+                            ),
+                            label: Text(
+                              completingDeliveryId == delivery.documentId
+                                  ? "Completing..."
+                                  : "Complete",
+                              style: const TextStyle(color: Colors.white),
+                            ),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.black,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
+                );
+              },
+            ),
           ),
         ],
       ),
